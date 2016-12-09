@@ -1,6 +1,8 @@
 package snapstats
 
 import (
+	"time"
+
 	"github.com/intelsdi-x/snap-plugin-lib-go/v1/plugin"
 	. "github.com/intelsdi-x/snap-plugin-utilities/logger"
 	// "k8s.io/client-go/rest"
@@ -12,31 +14,58 @@ type Snapstats struct {
 // CollectMetrics collects metrics for testing
 func (n *Snapstats) CollectMetrics(mts []plugin.Metric) ([]plugin.Metric, error) {
 	LogDebug("request to collect metrics", "metric_count", len(mts))
-	metrics := make([]plugin.Metric, 0)
 
 	snapUrl, err := mts[0].Config.GetString("snap-url")
 	if err != nil {
-		LogError("failed to fetch config value snap-url.", "error", err)
+		LogError("The snapstats collector failed to fetch config value snap-url.", "error", err)
 		return nil, err
 	}
 
 	client, err := NewClient(snapUrl, true)
 	if err != nil {
-		LogError("failed to create Snap api client.", "error", err)
+		LogError("The snapstats collector failed to create Snap api client.", "error", err)
 		return nil, err
 	}
 
-	client.GetTasks()
-	// for _, t := range totalStats.Items {
-	// 	podMetrics, _ := podCollector.Collect(mts, p)
-	// 	metrics = append(metrics, podMetrics...)
-	// }
+	tasks, err := client.GetTasks()
+
+	metrics, err := collectTotalStats(mts, tasks)
+	if err != nil {
+		LogError("The snapstats collector failed to create TotalStats metrics.", "error", err)
+		return nil, err
+	}
 
 	LogDebug("collecting metrics completed", "metric_count", len(metrics))
 	return metrics, nil
 }
 
-func (n *Snapstats) GetMetricTypes(cfg plugin.Config) ([]plugin.Metric, error) {
+func collectTotalStats(mts []plugin.Metric, tasks []Task) ([]plugin.Metric, error) {
+	metrics := make([]plugin.Metric, 0)
+	var totalCount int
+
+	for _, mt := range mts {
+		ns := mt.Namespace.Strings()
+		totalCount = 0
+
+		for _, t := range tasks {
+			if ns[3] == "state" && t.TaskState == ns[4] {
+				totalCount++
+			} else if ns[3] == "hitcount" {
+				totalCount += t.HitCount
+			} else if ns[3] == "failedcount" {
+				totalCount += t.FailedCount
+			}
+		}
+
+		mt.Data = totalCount
+		mt.Timestamp = time.Now()
+		metrics = append(metrics, mt)
+	}
+
+	return metrics, nil
+}
+
+func getTotalStatsMetricTypes() []plugin.Metric {
 	mts := []plugin.Metric{}
 
 	mts = append(mts, plugin.Metric{
@@ -53,6 +82,24 @@ func (n *Snapstats) GetMetricTypes(cfg plugin.Config) ([]plugin.Metric, error) {
 		Namespace: plugin.NewNamespace("grafanalabs", "snapstats", "tasks", "state", "Stopped", "count"),
 		Version:   1,
 	})
+
+	mts = append(mts, plugin.Metric{
+		Namespace: plugin.NewNamespace("grafanalabs", "snapstats", "tasks", "hitcount"),
+		Version:   1,
+	})
+
+	mts = append(mts, plugin.Metric{
+		Namespace: plugin.NewNamespace("grafanalabs", "snapstats", "tasks", "failedcount"),
+		Version:   1,
+	})
+
+	return mts
+}
+
+func (n *Snapstats) GetMetricTypes(cfg plugin.Config) ([]plugin.Metric, error) {
+	mts := []plugin.Metric{}
+
+	mts = append(mts, getTotalStatsMetricTypes()...)
 
 	return mts, nil
 }

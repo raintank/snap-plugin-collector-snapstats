@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "schedule": {
+    "type": "simple",
+    "interval": "10s"
+  },
+  "workflow": {
+    "collect": {
+      "metrics": {
+        "/grafanalabs/snapstats/*":{}
+      },
+      "config": {
+        "/grafanalabs/snapstats": {
+          "snap-url": "http://localhost:8181"
+        }
+      },
+      "process": null,
+      "publish": [
+        {
+          "plugin_name": "file",
+          "config": {
+            "file": "/tmp/snapstats.log"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -15,6 +15,12 @@
 			"revisionTime": "2016-11-17T03:31:26Z"
 		},
 		{
+			"checksumSHA1": "yyAzHoiVLu+xywYI2BDyRq6sOqE=",
+			"path": "github.com/google/go-querystring/query",
+			"revision": "9235644dd9e52eeae6fa48efd539fdc351a0af53",
+			"revisionTime": "2016-03-11T01:20:12Z"
+		},
+		{
 			"checksumSHA1": "heMa8aseS2k6NeJYumwo/xeKToY=",
 			"path": "github.com/gopherjs/gopherjs/js",
 			"revision": "4b53e1bddba0e2f734514aeb6c02db652f4c6fe8",
@@ -200,13 +206,13 @@
 		},
 		{
 			"path": "google.golang.org/grpc/stats",
-			"revision": "",
+			"revision": "v1.0.3",
 			"version": "v1.0.3",
 			"versionExact": "v1.0.3"
 		},
 		{
 			"path": "google.golang.org/grpc/tap",
-			"revision": "",
+			"revision": "v1.0.3",
 			"version": "v1.0.3",
 			"versionExact": "v1.0.3"
 		},
