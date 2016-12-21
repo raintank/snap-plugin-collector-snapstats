@@ -11,6 +11,8 @@ import (
 type Snapstats struct {
 }
 
+var client *Client
+
 // CollectMetrics collects metrics for testing
 func (n *Snapstats) CollectMetrics(mts []plugin.Metric) ([]plugin.Metric, error) {
 	LogDebug("request to collect metrics", "metric_count", len(mts))
@@ -21,10 +23,12 @@ func (n *Snapstats) CollectMetrics(mts []plugin.Metric) ([]plugin.Metric, error)
 		return nil, err
 	}
 
-	client, err := NewClient(snapUrl, true)
-	if err != nil {
-		LogError("The snapstats collector failed to create Snap api client.", "error", err)
-		return nil, err
+	if client == nil {
+		client, err = NewClient(snapUrl, true)
+		if err != nil {
+			LogError("The snapstats collector failed to create Snap api client.", "error", err)
+			return nil, err
+		}
 	}
 
 	tasks, err := client.GetTasks()
